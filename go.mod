@@ -1,4 +1,4 @@
-module github.com/MultiAdaptive/sigsdk
+module github.com/MultiAdaptive/sig-sdk
 
 go 1.20
 
