@@ -1,6 +1,7 @@
 package sigsdk
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"strings"
@@ -15,20 +16,29 @@ import (
 
 const NUMELEMENTS = 14
 
-func SigWithSchnorr(cm string, privateKey *btcec.PrivateKey, commitTx, revealTx *wire.MsgTx, inscriptionScript []byte) ([]byte, error) {
-	if blockchain.CheckTransactionSanity(btcutil.NewTx(commitTx)) != nil {
+func SigWithSchnorr(cm, privateKeyBytes, commitTxBytes, revealTxBytes, inscriptionScript []byte) ([]byte, error) {
+	privateKey, _ := btcec.PrivKeyFromBytes(privateKeyBytes)
+
+	var commitMsgTx wire.MsgTx
+	commitMsgTx.Deserialize(bytes.NewReader(commitTxBytes))
+	commitTx := btcutil.NewTx(&commitMsgTx)
+	if blockchain.CheckTransactionSanity(commitTx) != nil {
 		return nil, errors.New("committx check sanity failed")
 	}
 
-	if blockchain.CheckTransactionSanity(btcutil.NewTx(revealTx)) != nil {
+	var revealMsgtX wire.MsgTx
+	revealMsgtX.Deserialize(bytes.NewReader(revealTxBytes))
+	revealTx := btcutil.NewTx(&revealMsgtX)
+
+	if blockchain.CheckTransactionSanity(revealTx) != nil {
 		return nil, errors.New("revealtx check sanity failed")
 	}
 
 	revealTxPreOutputFetcher := txscript.NewMultiPrevOutFetcher(nil)
 	revealTxPreOutputFetcher.AddPrevOut(wire.OutPoint{
-		Hash:  commitTx.TxHash(),
+		Hash:  commitTx.MsgTx().TxHash(),
 		Index: uint32(0),
-	}, commitTx.TxOut[0])
+	}, commitTx.MsgTx().TxOut[0])
 
 	disasm, err := txscript.DisasmString(inscriptionScript)
 	if err != nil {
@@ -41,13 +51,13 @@ func SigWithSchnorr(cm string, privateKey *btcec.PrivateKey, commitTx, revealTx 
 		return nil, errors.New("script format is error")
 	}
 	scriptCm := scriptElements[1]
-	if cm != scriptCm {
+	if string(cm) != scriptCm {
 		return nil, errors.New("commitment is error")
 	}
 
-	sigHashes := txscript.NewTxSigHashes(revealTx, revealTxPreOutputFetcher)
+	sigHashes := txscript.NewTxSigHashes(revealTx.MsgTx(), revealTxPreOutputFetcher)
 	tapLeaf := txscript.NewBaseTapLeaf(inscriptionScript)
-	witnessArray, err := txscript.CalcTapscriptSignaturehash(sigHashes, txscript.SigHashDefault, revealTx, 0, revealTxPreOutputFetcher, tapLeaf)
+	witnessArray, err := txscript.CalcTapscriptSignaturehash(sigHashes, txscript.SigHashDefault, revealTx.MsgTx(), 0, revealTxPreOutputFetcher, tapLeaf)
 	if err != nil {
 		return nil, err
 	}
