@@ -17,21 +17,29 @@ import (
 const NUMELEMENTS = 14
 
 func SigWithSchnorr(cm, privateKeyBytes, commitTxBytes, revealTxBytes, inscriptionScript []byte) ([]byte, error) {
+	var err error
 	privateKey, _ := btcec.PrivKeyFromBytes(privateKeyBytes)
 
 	var commitMsgTx wire.MsgTx
-	commitMsgTx.Deserialize(bytes.NewReader(commitTxBytes))
+	err = commitMsgTx.Deserialize(bytes.NewReader(commitTxBytes))
+	if err != nil {
+		return nil, errors.New("commitTx deserialize failed." + err.Error())
+	}
 	commitTx := btcutil.NewTx(&commitMsgTx)
-	if blockchain.CheckTransactionSanity(commitTx) != nil {
-		return nil, errors.New("committx check sanity failed")
+	err = blockchain.CheckTransactionSanity(commitTx)
+	if err != nil {
+		return nil, errors.New("commitTx check sanity failed." + err.Error())
 	}
 
-	var revealMsgtX wire.MsgTx
-	revealMsgtX.Deserialize(bytes.NewReader(revealTxBytes))
-	revealTx := btcutil.NewTx(&revealMsgtX)
-
-	if blockchain.CheckTransactionSanity(revealTx) != nil {
-		return nil, errors.New("revealtx check sanity failed")
+	var revealMsgTx wire.MsgTx
+	err = revealMsgTx.Deserialize(bytes.NewReader(revealTxBytes))
+	if err != nil {
+		return nil, errors.New("revealTx deserialize failed." + err.Error())
+	}
+	revealTx := btcutil.NewTx(&revealMsgTx)
+	err = blockchain.CheckTransactionSanity(revealTx)
+	if err != nil {
+		return nil, errors.New("revealTx check sanity failed." + err.Error())
 	}
 
 	revealTxPreOutputFetcher := txscript.NewMultiPrevOutFetcher(nil)
