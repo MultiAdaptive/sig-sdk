@@ -14,8 +14,6 @@ import (
 	"github.com/btcsuite/btcd/wire"
 )
 
-const NUMELEMENTS = 14
-
 func SigWithSchnorr(cm, privateKeyBytes, commitTxBytes, revealTxBytes, inscriptionScript []byte) ([]byte, error) {
 	privateKey, _ := btcec.PrivKeyFromBytes(privateKeyBytes)
 
@@ -47,10 +45,11 @@ func SigWithSchnorr(cm, privateKeyBytes, commitTxBytes, revealTxBytes, inscripti
 	fmt.Println("disasm: ", disasm)
 
 	scriptElements := strings.Split(disasm, " ")
-	if len(scriptElements) != NUMELEMENTS {
+	if len(scriptElements) == 0 {
 		return nil, errors.New("script format is error")
 	}
-	scriptCm := scriptElements[1]
+	scriptCm := scriptElements[len(scriptElements)-2]
+	fmt.Println("scriptCm", scriptCm)
 	if string(cm) != scriptCm {
 		return nil, errors.New("commitment is error")
 	}
