@@ -2,6 +2,7 @@ package sigsdk
 
 import (
 	"bytes"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"strings"
@@ -50,7 +51,9 @@ func SigWithSchnorr(cm, privateKeyBytes, commitTxBytes, revealTxBytes, inscripti
 	}
 	scriptCm := scriptElements[len(scriptElements)-2]
 	fmt.Println("scriptCm", scriptCm)
-	if string(cm) != scriptCm {
+	userCm := hex.EncodeToString(cm)
+	fmt.Println("userCm", userCm)
+	if userCm != scriptCm {
 		return nil, errors.New("commitment is error")
 	}
 
