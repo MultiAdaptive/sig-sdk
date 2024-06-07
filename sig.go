@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/btcsuite/btcd/blockchain"
@@ -43,16 +42,16 @@ func SigWithSchnorr(cm, privateKeyBytes, commitTxBytes, revealTxBytes, inscripti
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("disasm: ", disasm)
+	//fmt.Println("disasm: ", disasm)
 
 	scriptElements := strings.Split(disasm, " ")
 	if len(scriptElements) == 0 {
 		return nil, errors.New("script format is error")
 	}
 	scriptCm := scriptElements[len(scriptElements)-2]
-	fmt.Println("scriptCm", scriptCm)
+	//fmt.Println("scriptCm", scriptCm)
 	userCm := hex.EncodeToString(cm)
-	fmt.Println("userCm", userCm)
+	//fmt.Println("userCm", userCm)
 	if userCm != scriptCm {
 		return nil, errors.New("commitment is error")
 	}
