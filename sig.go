@@ -48,6 +48,14 @@ func SigWithSchnorr(cm, privateKeyBytes, commitTxBytes, revealTxBytes, inscripti
 	if len(scriptElements) == 0 {
 		return nil, errors.New("script format is error")
 	}
+	dataCMType := scriptElements[len(scriptElements)-4]
+	dataCMTypeBytes, err := hex.DecodeString(dataCMType)
+	if err != nil {
+		return nil, errors.New("decode data CM failed")
+	}
+	if string(dataCMTypeBytes) != "MultiAaptiveCM;charset=utf-8" {
+		return nil, errors.New("data CM type is not valid")
+	}
 	scriptCm := scriptElements[len(scriptElements)-2]
 	//fmt.Println("scriptCm", scriptCm)
 	userCm := hex.EncodeToString(cm)
